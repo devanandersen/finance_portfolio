@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import norm, gmean, cauchy
 import seaborn as sns
 from datetime import datetime
+import time
 
 #%matplotlib inline
 symbol = "L.TO"
@@ -72,7 +73,10 @@ def probs_find(predicted, higherthan, on = 'value'):
         less = [i for i in predList if i < higherthan]
     else:
         print("'on' must be either value or return")
-    return (len(over)/(len(over)+len(less)))
+    if len(over) > 0 or len(less) > 0:
+        return (len(over)/(len(over)+len(less)))
+    else:
+        return 0
 
 def log_returns(data):
     return (np.log(1+data.pct_change()))
@@ -121,7 +125,7 @@ def monte_carlo(tickers, days_forecast, iterations, start_date = '2000-1-1', ret
         #print(f"Beta: {round(inform.iloc[t,inform.columns.get_loc('Beta')],2)}")
         #print(f"Sharpe: {round(inform.iloc[t,inform.columns.get_loc('Sharpe')],2)}") 
         #print(f"CAPM Return: {round(100*inform.iloc[t,inform.columns.get_loc('CAPM')],2)}%")
-        y['icker'] = tickers[t]
+        y['ticker'] = tickers[t]
         cols = y.columns.tolist()
         cols = cols[-1:] + cols[:-1]
         y = y[cols]
@@ -132,4 +136,13 @@ def monte_carlo(tickers, days_forecast, iterations, start_date = '2000-1-1', ret
 start = "2015-1-1"
 days_to_forecast= 251
 simulation_trials= 10000
-ret_sim_df = monte_carlo([symbol], days_forecast= days_to_forecast, iterations=simulation_trials,  start_date=start, plotten=False)
+symbols = open('symbols.txt', 'r')
+Lines = symbols.readlines()
+
+# plz don't ban me yahoo
+for symbol in Lines:
+    symbol = symbol.strip()
+    ret_sim_df = monte_carlo([symbol], days_forecast= days_to_forecast, iterations=simulation_trials,  start_date=start, plotten=False)
+    # plz plz
+    time.sleep(5)
+    print()
