@@ -6,9 +6,10 @@ from scipy.stats import norm, gmean, cauchy
 import seaborn as sns
 from datetime import datetime
 import time
+import pickle
 
 #%matplotlib inline
-symbol = "L.TO"
+results = {}
 
 def import_stock_data(tickers, start = '2010-1-1', end = datetime.today().strftime('%Y-%m-%d')):
     data = pd.DataFrame()
@@ -20,7 +21,6 @@ def import_stock_data(tickers, start = '2010-1-1', end = datetime.today().strfti
             data[t] = wb.get_data_yahoo(t, start = start)['Adj Close']
     return(data)
 
-data = import_stock_data([symbol])
 
 def drift_calc(data, return_type='log'):
     if return_type=='log':
@@ -34,6 +34,7 @@ def drift_calc(data, return_type='log'):
         return drift.values
     except:
         return drift
+
 
 def daily_returns(data, days, iterations, return_type='log'):
     ft = drift_calc(data, return_type)
@@ -51,6 +52,7 @@ def daily_returns(data, days, iterations, return_type='log'):
     # This distribution is called cauchy distribution
     dr = np.exp(ft + stv * norm.ppf(np.random.rand(days, iterations)))
     return dr
+
 
 def probs_find(predicted, higherthan, on = 'value'):
     """
@@ -78,8 +80,10 @@ def probs_find(predicted, higherthan, on = 'value'):
     else:
         return 0
 
+
 def log_returns(data):
     return (np.log(1+data.pct_change()))
+
 
 def simulate_mc(data, days, iterations, return_type='log', plot=False):
     returns = daily_returns(data, days, iterations, return_type)
@@ -134,7 +138,7 @@ def monte_carlo(tickers, days_forecast, iterations, start_date = '2000-1-1', ret
     return simulatedDF
 
 start = "2015-1-1"
-days_to_forecast= 251
+days_to_forecast= 90
 simulation_trials= 10000
 symbols = open('symbols.txt', 'r')
 Lines = symbols.readlines()
@@ -142,7 +146,16 @@ Lines = symbols.readlines()
 # plz don't ban me yahoo
 for symbol in Lines:
     symbol = symbol.strip()
-    ret_sim_df = monte_carlo([symbol], days_forecast= days_to_forecast, iterations=simulation_trials,  start_date=start, plotten=False)
+    try:
+        results[symbol] = monte_carlo([symbol], days_forecast= days_to_forecast, iterations=simulation_trials,  start_date=start, plotten=False)
+    except:
+        with open("results.pkl", "w") as outfile:
+            pickle.dump(results, outfile)
+        continue
+
     # plz plz
     time.sleep(5)
     print()
+
+with open("results.pkl", "w") as outfile:
+    pickle.dump(results, outfile)
