@@ -7,6 +7,7 @@ import seaborn as sns
 from datetime import datetime
 import time
 import pickle
+import os
 
 #%matplotlib inline
 results = {}
@@ -144,18 +145,21 @@ symbols = open('symbols.txt', 'r')
 Lines = symbols.readlines()
 
 # plz don't ban me yahoo
+if os.path.isfile('./results.pkl'):
+    with open('results.pkl', 'rb') as f:
+        results = pickle.load(f)
+
 for symbol in Lines:
     symbol = symbol.strip()
-    try:
-        results[symbol] = monte_carlo([symbol], days_forecast= days_to_forecast, iterations=simulation_trials,  start_date=start, plotten=False)
-    except:
-        with open("results.pkl", "w") as outfile:
-            pickle.dump(results, outfile)
-        continue
-
-    # plz plz
-    time.sleep(5)
+    if symbol not in results.keys():
+        try:
+            results[symbol] = monte_carlo([symbol], days_forecast= days_to_forecast, iterations=simulation_trials,  start_date=start, plotten=False)
+        except:
+            with open("results.pkl", "wb") as outfile:
+                pickle.dump(results, outfile)
+        # plz plz
+        time.sleep(5)
     print()
 
-with open("results.pkl", "w") as outfile:
+with open("results.pkl", "wb") as outfile:
     pickle.dump(results, outfile)
